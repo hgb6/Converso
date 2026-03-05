@@ -4,8 +4,13 @@
 <title>🧺Converso Store</title>
 </head>
 <body>
+<div class="scrollmenu">
+<a href="#home"><a href="Home.html">Home</a>&nbsp;&nbsp;
+<a href="#Converso Chatbot"><a href="Converso.html">Converso Chatbot</a>&nbsp;&nbsp;
+<a href="#Games"><a href="Converso-Store.html">Converso Store</a>&nbsp;&nbsp;
+</div>
 <p>
-Ping Pong World Tour
+Ping Pong World Tour<a href="Ping-Pong-World-Tour.html">Ping Pong World Tour</a>&nbsp;&nbsp;
 </p>
 </body>
 </html>
