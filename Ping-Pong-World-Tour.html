@@ -1,7 +1,9 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
 <title>Ping Pong World Tour</title>
+
 <style>
 
 body{
@@ -30,14 +32,10 @@ margin-top:10px;
 }
 
 </style>
+
 </head>
 
 <body>
-<div class="scrollmenu">
-<a href="#home"><a href="Home.html">Home</a>&nbsp;&nbsp;
-<a href="#Converso Chatbot"><a href="Converso.html">Converso Chatbot</a>&nbsp;&nbsp;
-<a href="#Games"><a href="Games.html">Converso Store</a>&nbsp;&nbsp;
-</div>
 
 <h1>🏓 Ping Pong World Tour 🌍</h1>
 
@@ -61,9 +59,12 @@ Coins: <span id="coins">0</span>
 
 <h3>🛍 Racket Shop</h3>
 
-<button onclick="buyRacket('speed',50)">Speed (50)</button>
-<button onclick="buyRacket('giant',40)">Giant (40)</button>
-<button onclick="buyRacket('power',100)">Power (100)</button>
+<button onclick="buyRacket('normal',0)">Normal Bat (Free)</button>
+<button onclick="buyRacket('speedPro',80)">⚡ Speed Pro (80)</button>
+<button onclick="buyRacket('spinMaster',120)">🌀 Spin Master (120)</button>
+<button onclick="buyRacket('control',100)">🎯 Control Bat (100)</button>
+<button onclick="buyRacket('giant',60)">🏓 Giant Bat (60)</button>
+<button onclick="buyRacket('power',150)">💥 Power Smash (150)</button>
 
 </div>
 
@@ -83,24 +84,40 @@ let equipped = localStorage.getItem("equipped") || "normal"
 document.getElementById("coins").innerText = coins
 
 function save(){
+
 localStorage.setItem("coins",coins)
 localStorage.setItem("rackets",JSON.stringify(rackets))
 localStorage.setItem("equipped",equipped)
+
+}
+
+const racketStats = {
+
+normal:{size:45,speed:1,spin:1},
+
+speedPro:{size:45,speed:1.5,spin:1},
+
+spinMaster:{size:45,speed:1.1,spin:2},
+
+control:{size:55,speed:1,spin:1},
+
+giant:{size:65,speed:0.9,spin:1},
+
+power:{size:45,speed:2,spin:0.8}
+
 }
 
 let player={
-x:40,
-y:200,
-w:18,
-h:100,
+x:80,
+y:250,
+r:45,
 score:0
 }
 
 let ai={
-x:840,
-y:200,
-w:18,
-h:100,
+x:820,
+y:250,
+r:45,
 score:0,
 speed:3
 }
@@ -110,29 +127,43 @@ x:450,
 y:250,
 vx:5,
 vy:3,
-r:10,
-z:0
+r:8
 }
 
-let powerReady=true
+let winScore = 10
+
+function applyRacketStats(){
+
+let stats = racketStats[equipped]
+
+player.r = stats.size
+
+}
 
 function startMatch(country,difficulty){
 
 player.score=0
 ai.score=0
+
 ai.speed=difficulty
 
+applyRacketStats()
+
 alert("Playing against "+country)
+
+resetBall()
 
 }
 
 function buyRacket(type,cost){
 
 if(rackets.includes(type)){
+
 equipped=type
 alert("Equipped "+type)
 save()
 return
+
 }
 
 if(coins>=cost){
@@ -156,29 +187,18 @@ alert("Not enough coins!")
 }
 
 canvas.addEventListener("mousemove",e=>{
+
 let rect=canvas.getBoundingClientRect()
-player.y=e.clientY-rect.top-player.h/2
+
+player.y=e.clientY-rect.top
+
 })
 
 canvas.addEventListener("touchmove",e=>{
 
 let rect=canvas.getBoundingClientRect()
-player.y=e.touches[0].clientY-rect.top-player.h/2
 
-})
-
-document.addEventListener("keydown",e=>{
-
-if(e.code==="Space" && powerReady){
-
-ball.vx*=1.8
-powerReady=false
-
-setTimeout(()=>{
-powerReady=true
-},2000)
-
-}
+player.y=e.touches[0].clientY-rect.top
 
 })
 
@@ -186,7 +206,31 @@ function resetBall(){
 
 ball.x=canvas.width/2
 ball.y=canvas.height/2
-ball.vx*=-1
+
+ball.vx = Math.random()>0.5 ? 5 : -5
+ball.vy = (Math.random()*4)-2
+
+}
+
+function checkWin(){
+
+if(player.score>=winScore){
+
+alert("🏆 You Win The Match!")
+
+player.score=0
+ai.score=0
+
+}
+
+if(ai.score>=winScore){
+
+alert("😢 You Lost The Match")
+
+player.score=0
+ai.score=0
+
+}
 
 }
 
@@ -196,20 +240,24 @@ ball.x+=ball.vx
 ball.y+=ball.vy
 
 if(ball.y<0 || ball.y>canvas.height){
+
 ball.vy*=-1
-}
-
-if(ball.x<player.x+player.w &&
-ball.y>player.y &&
-ball.y<player.y+player.h){
-
-ball.vx=Math.abs(ball.vx)
 
 }
 
-if(ball.x>ai.x &&
-ball.y>ai.y &&
-ball.y<ai.y+ai.h){
+let stats = racketStats[equipped]
+
+if(ball.x<player.x+player.r &&
+Math.abs(ball.y-player.y)<player.r){
+
+ball.vx=Math.abs(ball.vx)*stats.speed
+
+ball.vy += (Math.random()-0.5)*stats.spin*4
+
+}
+
+if(ball.x>ai.x-ai.r &&
+Math.abs(ball.y-ai.y)<ai.r){
 
 ball.vx=-Math.abs(ball.vx)
 
@@ -225,34 +273,47 @@ resetBall()
 if(ball.x>canvas.width){
 
 player.score++
+
 coins+=10
+
 document.getElementById("coins").innerText=coins
+
 save()
+
 resetBall()
 
 }
 
-ai.y+=((ball.y-(ai.y+ai.h/2))*0.08)*ai.speed
+ai.y+=((ball.y-ai.y)*0.1)*ai.speed
 
 document.getElementById("score").innerText=
 player.score+" : "+ai.score
+
+checkWin()
 
 }
 
 function drawTable(){
 
 let grad=ctx.createLinearGradient(0,0,0,500)
+
 grad.addColorStop(0,"#1e293b")
 grad.addColorStop(1,"#020617")
 
 ctx.fillStyle=grad
+
 ctx.fillRect(0,0,canvas.width,canvas.height)
 
 ctx.strokeStyle="white"
+
 ctx.setLineDash([10,10])
+
 ctx.beginPath()
+
 ctx.moveTo(canvas.width/2,0)
+
 ctx.lineTo(canvas.width/2,canvas.height)
+
 ctx.stroke()
 
 ctx.setLineDash([])
@@ -263,15 +324,28 @@ function draw(){
 
 drawTable()
 
-ctx.fillStyle="white"
-ctx.fillRect(player.x,player.y,player.w,player.h)
-
-ctx.fillRect(ai.x,ai.y,ai.w,ai.h)
-
-let size=ball.r + ball.z
+ctx.fillStyle="red"
 
 ctx.beginPath()
-ctx.arc(ball.x,ball.y,size,0,Math.PI*2)
+
+ctx.arc(player.x,player.y,player.r,0,Math.PI*2)
+
+ctx.fill()
+
+ctx.fillStyle="blue"
+
+ctx.beginPath()
+
+ctx.arc(ai.x,ai.y,ai.r,0,Math.PI*2)
+
+ctx.fill()
+
+ctx.fillStyle="white"
+
+ctx.beginPath()
+
+ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2)
+
 ctx.fill()
 
 }
@@ -279,6 +353,7 @@ ctx.fill()
 function game(){
 
 update()
+
 draw()
 
 requestAnimationFrame(game)
@@ -291,3 +366,4 @@ game()
 
 </body>
 </html>
+```
